@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { UserButton } from "@/components/user-button";
+import { UserButton } from "@/features/auth/components/user-button";
 import { getSession } from "@/lib/session";
 import { Button } from "./ui/button";
 import { NavigationMenu, NavigationMenuList } from "./ui/navigation-menu";
