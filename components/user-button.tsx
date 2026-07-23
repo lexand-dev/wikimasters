@@ -1,42 +1,27 @@
 "use client";
 
 import { LogOutIcon } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenuGroup,
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+import type { Session } from "@/lib/session";
 
-export function UserButton() {
+interface UserButtonProps {
+  session: Session;
+}
+
+export function UserButton({ session }: UserButtonProps) {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
-
-  if (isPending) {
-    return <div className="size-8 rounded-full bg-muted animate-pulse" />;
-  }
-
-  if (!session) {
-    return (
-      <div className="flex items-center gap-2">
-        <Button variant="outline">
-          <Link href="/sign-in">Sign In</Link>
-        </Button>
-        <Button>
-          <Link href="/sign-up">Sign Up</Link>
-        </Button>
-      </div>
-    );
-  }
 
   const initials = (session.user.name ?? "")
     .split(" ")
@@ -52,6 +37,9 @@ export function UserButton() {
     router.refresh();
   };
 
+  // TODO: add fallback avatar image
+  const userImage = session.user?.image ?? undefined;
+
   return (
     <DropdownMenuGroup>
       <DropdownMenu>
@@ -60,12 +48,7 @@ export function UserButton() {
           className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <Avatar size="default">
-            {session.user.image ? (
-              <AvatarImage
-                src={session.user.image}
-                alt={session.user.name ?? "Account"}
-              />
-            ) : null}
+            <AvatarImage src={userImage} alt={session.user.name} />
             <AvatarFallback>{initials || "?"}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>

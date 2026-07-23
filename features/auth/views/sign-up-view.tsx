@@ -21,46 +21,42 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  type SignUpValues,
+  signUpSchema,
+} from "@/features/auth/schema/auth-schema";
 import { authClient } from "@/lib/auth-client";
 
-interface FormState {
-  name: string;
-  email: string;
-  password: string;
-}
-
-interface FormErrors extends Partial<FormState> {
-  form?: string;
-}
-
-export default function SignUpPage() {
+export function SignUpView() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>({
+  const [form, setForm] = useState<SignUpValues>({
     name: "",
     email: "",
     password: "",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof SignUpValues | "form", string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const update = (key: keyof FormState, value: string) => {
+  const update = (key: keyof SignUpValues, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) {
-      setErrors((prev) => ({ ...prev, [key]: undefined }));
-    }
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
   const validate = (): boolean => {
-    const next: FormErrors = {};
-    if (!form.name.trim()) next.name = "Name is required";
-    if (!form.email.trim()) next.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      next.email = "Enter a valid email address";
-    if (!form.password) next.password = "Password is required";
-    else if (form.password.length < 8)
-      next.password = "Password must be at least 8 characters";
+    const result = signUpSchema.safeParse(form);
+    if (result.success) {
+      setErrors({});
+      return true;
+    }
+    const next: Partial<Record<keyof SignUpValues, string>> = {};
+    for (const issue of result.error.issues) {
+      const key = issue.path[0] as keyof SignUpValues | undefined;
+      if (key && !next[key]) next[key] = issue.message;
+    }
     setErrors(next);
-    return Object.keys(next).length === 0;
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,4 +1,5 @@
-import WikiArticleViewer from "@/components/wiki-article-viewer";
+import type { Article } from "@/features/wiki/types/article";
+import { ArticleView } from "@/features/wiki/views/article-view";
 
 interface ViewArticlePageProps {
   params: Promise<{
@@ -11,11 +12,8 @@ export default async function ViewArticlePage({
 }: ViewArticlePageProps) {
   const { id } = await params;
 
-  // Mock permission check - in a real app, this would come from auth/user context
-  const canEdit = true; // Set to true for demonstration
-
-  // Mock article data - in a real app, this would be fetched from an API
-  const mockArticle = {
+  // Mock article data - in a real app, this would be fetched from your API
+  const mockArticle: Article = {
     id: +id,
     title: "Welcome to WikiFlow",
     content: `# Getting Started with WikiFlow
@@ -103,8 +101,9 @@ If you encounter any issues or have questions about using WikiFlow, don't hesita
 Happy writing! 🚀`,
     author: "Admin User",
     createdAt: "2024-01-15",
-    imageUrl: "/placeholder-image.svg", // Using SVG placeholder for demonstration
+    imageUrl: "/placeholder-image.svg",
   };
 
-  return <WikiArticleViewer article={mockArticle} canEdit={canEdit} />;
+  // Authenticated users can edit; refine with per-author permissions later
+  return <ArticleView article={mockArticle} canEdit />;
 }

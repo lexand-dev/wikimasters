@@ -21,38 +21,38 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  type SignInValues,
+  signInSchema,
+} from "@/features/auth/schema/auth-schema";
 import { authClient } from "@/lib/auth-client";
 
-interface FormState {
-  email: string;
-  password: string;
-}
-
-interface FormErrors extends Partial<FormState> {
-  form?: string;
-}
-
-export default function SignInPage() {
+export function SignInView() {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>({ email: "", password: "" });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [form, setForm] = useState<SignInValues>({ email: "", password: "" });
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof SignInValues | "form", string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const update = (key: keyof FormState, value: string) => {
+  const update = (key: keyof SignInValues, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (errors[key]) {
-      setErrors((prev) => ({ ...prev, [key]: undefined }));
-    }
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
   const validate = (): boolean => {
-    const next: FormErrors = {};
-    if (!form.email.trim()) next.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      next.email = "Enter a valid email address";
-    if (!form.password) next.password = "Password is required";
+    const result = signInSchema.safeParse(form);
+    if (result.success) {
+      setErrors({});
+      return true;
+    }
+    const next: Partial<Record<keyof SignInValues, string>> = {};
+    for (const issue of result.error.issues) {
+      const key = issue.path[0] as keyof SignInValues | undefined;
+      if (key && !next[key]) next[key] = issue.message;
+    }
     setErrors(next);
-    return Object.keys(next).length === 0;
+    return false;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

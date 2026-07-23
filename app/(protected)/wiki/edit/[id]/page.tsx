@@ -1,4 +1,4 @@
-import WikiEditor from "@/components/wiki-editor";
+import { EditorView } from "@/features/wiki/views/editor-view";
 
 interface EditArticlePageProps {
   params: Promise<{
@@ -12,7 +12,6 @@ export default async function EditArticlePage({
   const { id } = await params;
 
   // In a real app, you would fetch the article data here
-  // For now, we'll just show some mock data if it's not "new"
   const mockData =
     id !== "new"
       ? {
@@ -36,10 +35,10 @@ This would normally be fetched from your API.`,
       : {};
 
   return (
-    <WikiEditor
+    <EditorView
       initialTitle={mockData.title}
       initialContent={mockData.content}
-      isEditing={true}
+      isEditing
       articleId={id}
     />
   );

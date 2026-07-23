@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  type CreateArticleValues,
+  createArticleSchema,
+} from "@/features/wiki/schema/article-schema";
 
 interface WikiEditorProps {
   initialTitle?: string;
@@ -16,18 +20,12 @@ interface WikiEditorProps {
   articleId?: string;
 }
 
-interface FormData {
-  title: string;
-  content: string;
-  files: File[];
-}
-
 interface FormErrors {
   title?: string;
   content?: string;
 }
 
-export default function WikiEditor({
+export function WikiEditor({
   initialTitle = "",
   initialContent = "",
   isEditing = false,
@@ -39,23 +37,24 @@ export default function WikiEditor({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validate form
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!title.trim()) {
-      newErrors.title = "Title is required";
+    const result = createArticleSchema.safeParse({
+      title: title.trim(),
+      content: content.trim(),
+    });
+    if (result.success) {
+      setErrors({});
+      return true;
     }
-
-    if (!content.trim()) {
-      newErrors.content = "Content is required";
+    const next: FormErrors = {};
+    for (const issue of result.error.issues) {
+      const key = issue.path[0] as "title" | "content" | undefined;
+      if (key && !next[key]) next[key] = issue.message;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(next);
+    return false;
   };
 
-  // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
     if (selectedFiles) {
@@ -64,12 +63,10 @@ export default function WikiEditor({
     }
   };
 
-  // Remove file
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -79,7 +76,7 @@ export default function WikiEditor({
 
     setIsSubmitting(true);
 
-    const formData: FormData = {
+    const payload: CreateArticleValues & { files: File[] } = {
       title: title.trim(),
       content: content.trim(),
       files,
@@ -89,7 +86,7 @@ export default function WikiEditor({
     console.log("Form submitted:", {
       action: isEditing ? "edit" : "create",
       articleId: isEditing ? articleId : undefined,
-      data: formData,
+      data: payload,
     });
 
     // Simulate API call delay
@@ -105,9 +102,7 @@ export default function WikiEditor({
     );
   };
 
-  // Handle cancel
   const handleCancel = () => {
-    // In a real app, you would navigate back
     const shouldLeave = window.confirm(
       "Are you sure you want to cancel? Any unsaved changes will be lost.",
     );

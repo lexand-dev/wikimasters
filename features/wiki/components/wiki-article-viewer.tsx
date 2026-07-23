@@ -4,31 +4,22 @@ import { Calendar, ChevronRight, Edit, Home, Trash, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { deleteArticleForm } from "@/app/actions/articles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface ViewerArticle {
-  title: string;
-  author: string | null;
-  id: number;
-  content: string;
-  createdAt: string;
-  imageUrl?: string | null;
-}
+import { deleteArticleForm } from "@/features/wiki/actions/articles";
+import type { Article } from "@/features/wiki/types/article";
 
 interface WikiArticleViewerProps {
-  article: ViewerArticle;
+  article: Article;
   canEdit?: boolean;
   pageviews?: number | null;
 }
 
-export default function WikiArticleViewer({
+export function WikiArticleViewer({
   article,
   canEdit = false,
 }: WikiArticleViewerProps) {
-  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {

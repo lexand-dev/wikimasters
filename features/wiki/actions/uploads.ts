@@ -1,8 +1,5 @@
 "use server";
 
-// Server action to handle uploads (stub)
-// TODO: Replace placeholder logic with real Cloudinary (or other) upload
-
 export type UploadedFile = {
   url: string;
   size: number;

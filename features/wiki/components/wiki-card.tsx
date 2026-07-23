@@ -7,22 +7,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { ArticleSummary } from "@/features/wiki/types/article";
 
 interface WikiCardProps {
-  title: string;
-  author: string;
-  date: string;
-  summary: string;
-  href: string;
+  article: ArticleSummary;
 }
 
-export function WikiCard({
-  title,
-  author,
-  date,
-  summary,
-  href,
-}: WikiCardProps) {
+export function WikiCard({ article }: WikiCardProps) {
+  const { title, author, date, summary, href } = article;
   return (
     <Card>
       <CardHeader className="pb-2">
