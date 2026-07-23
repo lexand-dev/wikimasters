@@ -1,10 +1,6 @@
 import Link from "next/link";
-import { Button } from "./ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-} from "./ui/navigation-menu";
+import { UserButton } from "@/components/user-button";
+import { NavigationMenu, NavigationMenuList } from "./ui/navigation-menu";
 
 export const NavBar = () => {
   return (
@@ -19,16 +15,7 @@ export const NavBar = () => {
           </Link>
           <NavigationMenu>
             <NavigationMenuList className="flex items-center gap-2">
-              <NavigationMenuItem>
-                <Button variant="outline">
-                  <Link href="/signin">Sign In</Link>
-                </Button>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Button>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </NavigationMenuItem>
+              <UserButton />
             </NavigationMenuList>
           </NavigationMenu>
         </div>
