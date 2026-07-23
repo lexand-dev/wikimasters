@@ -207,7 +207,9 @@ export default function WikiEditor({
                     article
                   </p>
                 </div>
-                <Input
+                {/* Plain input: shadcn Input's w-full/h-8 would override
+                    sr-only's 1px size and cause horizontal page overflow */}
+                <input
                   id="file-upload"
                   type="file"
                   multiple
