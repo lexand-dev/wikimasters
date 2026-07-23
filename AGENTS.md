@@ -4,6 +4,73 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# Tooling
+
+- **Package manager**: use `bun` by default (`bun install`, `bun add`, `bun run`). Do not use npm/yarn/pnpm.
+
+# Conventional Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) for every commit. The goal is to group changes by **logical intent** so each commit is reviewable in isolation.
+
+## Commit types
+
+| Type       | Purpose                                              |
+| ---------- | ---------------------------------------------------- |
+| `feat`     | New feature or behavior                              |
+| `fix`      | Bug fix                                              |
+| `docs`     | Documentation only (README, AGENTS.md, comments)   |
+| `style`    | Formatting/style changes with no logic change        |
+| `refactor` | Code restructure without changing behavior           |
+| `perf`     | Performance improvement                              |
+| `test`     | Add or update tests                                  |
+| `build`    | Build system, dependencies, tooling config             |
+| `ci`       | CI/CD configuration changes                          |
+| `chore`    | Maintenance or miscellaneous                       |
+| `revert`   | Revert a previous commit                             |
+
+## Grouping principles
+
+- **Group by intent, not by file.** A commit should answer "why was this change made?", not "which files changed?".
+- **One logical change per commit.** A teammate should be able to read the diff and understand the change without relying on later commits.
+- **Avoid mixing commit types.** Do not combine a `feat` and a `refactor` in the same commit — it hides what is behavioral vs. structural.
+- **Keep docs with docs.** README/AGENTS.md changes usually deserve their own `docs` commit unless they are trivial typos.
+- **Stage renames together.** When moving a file, stage the delete and the add in the same commit so Git detects the rename.
+
+## Workflow before committing
+
+Always run checks on the changed files first:
+
+```bash
+bun run format
+bun run lint
+bun run typecheck
+```
+
+Fix only the issues in the files you are committing. Do not rewrite third-party or auto-generated code (e.g. `components/ui/*`) to resolve pre-existing lint warnings.
+
+## Format
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- Use present tense and imperative mood: "add proxy" not "added proxy" or "adds proxy".
+- Keep the description under 72 characters.
+- Reference issues when relevant: `Closes #123`, `Refs #456`.
+
+# Proxy (formerly Middleware)
+
+Next.js 16 renamed `middleware.ts` → `proxy.ts` (root-level, same level as `app/`). Use it for **optimistic** auth redirects only — no DB queries.
+
+- Use `getSessionCookie()` from `better-auth/cookies` — cookie-presence check, edge-safe, no DB.
+- `app/(protected)/layout.tsx` remains the authoritative DB-backed guard; proxy is the optimistic pre-filter (avoids flash of unauthenticated content / protects prefetches).
+- Never call `getSession()` in proxy (DB hit on every request, including prefetches).
+- Matcher must exclude `api/*` so Better Auth endpoints aren't intercepted.
+
 # Project Architecture
 
 This project uses **route groups** for auth boundaries and **feature-sliced modules** for code organization. Follow these conventions when adding routes, features, or components.
