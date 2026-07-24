@@ -1,5 +1,7 @@
 "use server";
 
+import { getSession } from "@/lib/session";
+
 export type UploadedFile = {
   url: string;
   size: number;
@@ -8,6 +10,9 @@ export type UploadedFile = {
 };
 
 export async function uploadFile(formData: FormData): Promise<UploadedFile> {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
   // Basic validation constants
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];

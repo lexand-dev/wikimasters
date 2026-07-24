@@ -20,23 +20,23 @@ export async function createArticle(data: CreateArticleValues) {
   const values = createArticleSchema.parse(data);
 
   // TODO: Replace with actual database insert
-  console.log("✨ createArticle called:", { authorId: user.id, ...values });
+  console.log("✨ createArticle called:", { ...values, authorId: user.id });
   return { success: true, message: "Article create logged (stub)" };
 }
 
 export async function updateArticle(id: string, data: UpdateArticleValues) {
-  await requireUser();
+  const user = await requireUser();
   const values = updateArticleSchema.parse(data);
 
   // TODO: Replace with actual database update
-  console.log("📝 updateArticle called:", { id, ...values });
+  console.log("📝 updateArticle called:", { ...values, id, authorId: user.id });
   return { success: true, message: `Article ${id} update logged (stub)` };
 }
 
 export async function deleteArticle(id: string) {
-  await requireUser();
+  const user = await requireUser();
   // TODO: Replace with actual database delete
-  console.log("🗑️ deleteArticle called:", id);
+  console.log("🗑️ deleteArticle called:", id, "with author", user.name);
   return { success: true, message: `Article ${id} delete logged (stub)` };
 }
 
