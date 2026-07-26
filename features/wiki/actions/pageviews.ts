@@ -1,5 +1,6 @@
 "use server";
 
+import { sendCelebrationEmail } from "@/features/wiki/actions/send-celebration-email";
 import { redis } from "@/lib/redis";
 import { getSession } from "@/lib/session";
 
@@ -34,7 +35,9 @@ export async function incrementArticleViews(
     if (added !== 1) return 0;
 
     const count = await redis.incr(viewsKey(id));
-    return typeof count === "number" ? count : Number(count);
+    const numericCount = typeof count === "number" ? count : Number(count);
+    sendCelebrationEmail({ articleId: id, pageviews: numericCount });
+    return numericCount;
   } catch {
     return 0;
   }
