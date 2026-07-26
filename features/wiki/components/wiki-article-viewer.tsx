@@ -1,6 +1,14 @@
 "use client";
 
-import { Calendar, ChevronRight, Edit, Home, Trash, User } from "lucide-react";
+import {
+  Calendar,
+  ChevronRight,
+  Edit,
+  Eye,
+  Home,
+  Trash,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
@@ -8,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { deleteArticleForm } from "@/features/wiki/actions/articles";
+import { useArticleViews } from "@/features/wiki/hooks/use-article-views";
 import type { Article } from "@/features/wiki/types/article";
 
 interface WikiArticleViewerProps {
@@ -19,7 +28,10 @@ interface WikiArticleViewerProps {
 export function WikiArticleViewer({
   article,
   canEdit = false,
+  pageviews,
 }: WikiArticleViewerProps) {
+  const views = useArticleViews(article.id, pageviews ?? 0);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -60,6 +72,10 @@ export function WikiArticleViewer({
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-1" />
               <span>{formatDate(article.createdAt)}</span>
+            </div>
+            <div className="flex items-center">
+              <Eye className="h-4 w-4 mr-1" />
+              <span>{views.toLocaleString()} views</span>
             </div>
             <div className="flex items-center">
               <Badge variant="secondary">Article</Badge>

@@ -4,8 +4,15 @@ import type { Article } from "@/features/wiki/types/article";
 interface ArticleViewProps {
   article: Article;
   canEdit?: boolean;
+  pageviews?: number | null;
 }
 
-export function ArticleView({ article, canEdit }: ArticleViewProps) {
-  return <WikiArticleViewer article={article} canEdit={canEdit} />;
+export function ArticleView({ article, canEdit, pageviews }: ArticleViewProps) {
+  return (
+    <WikiArticleViewer
+      article={article}
+      canEdit={canEdit}
+      pageviews={pageviews}
+    />
+  );
 }

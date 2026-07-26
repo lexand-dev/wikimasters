@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getArticleViews } from "@/features/wiki/actions/pageviews";
 import { getArticleById } from "@/features/wiki/data/articles";
 import { ArticleView } from "@/features/wiki/views/article-view";
 import { getSession } from "@/lib/session";
@@ -28,8 +29,14 @@ export default async function ViewArticlePage({
     notFound();
   }
 
-  const session = await getSession();
+  const [session, pageviews] = await Promise.all([
+    getSession(),
+    getArticleViews(articleId),
+  ]);
+
   const canEdit = session?.user.id === article.authorId;
 
-  return <ArticleView article={article} canEdit={canEdit} />;
+  return (
+    <ArticleView article={article} canEdit={canEdit} pageviews={pageviews} />
+  );
 }
