@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { deleteArticleForm } from "@/features/wiki/actions/articles";
 import { useArticleViews } from "@/features/wiki/hooks/use-article-views";
 import type { Article } from "@/features/wiki/types/article";
+import { formatDate } from "@/lib/format";
 
 interface WikiArticleViewerProps {
   article: Article;
@@ -30,16 +31,7 @@ export function WikiArticleViewer({
   canEdit = false,
   pageviews,
 }: WikiArticleViewerProps) {
-  const views = useArticleViews(article.id, pageviews ?? 0);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  const views = useArticleViews(article.id, pageviews ?? 0, article.authorId);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -67,7 +59,7 @@ export function WikiArticleViewer({
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center">
               <User className="h-4 w-4 mr-1" />
-              <span>By {article.author ?? "Unknown"}</span>
+              <span>By {article.authorName ?? "Unknown"}</span>
             </div>
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-1" />

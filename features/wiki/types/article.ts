@@ -2,7 +2,8 @@ export type Article = {
   id: number;
   title: string;
   content: string;
-  author: string | null;
+  authorName: string | null;
+  authorId: string;
   createdAt: string;
   imageUrl?: string | null;
 };
@@ -10,7 +11,7 @@ export type Article = {
 export type ArticleSummary = {
   id: number;
   title: string;
-  author: string | null;
+  authorName: string | null;
   date: string;
   summary: string;
   href: string;

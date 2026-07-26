@@ -14,12 +14,12 @@ interface WikiCardProps {
 }
 
 export function WikiCard({ article }: WikiCardProps) {
-  const { title, author, date, summary, href } = article;
+  const { title, authorName, date, summary, href } = article;
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{author}</span>
+          <span>{authorName ?? "Unknown"}</span>
           <span>•</span>
           <span>{date}</span>
         </div>
