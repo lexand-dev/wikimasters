@@ -62,6 +62,16 @@ Fix only the issues in the files you are committing. Do not rewrite third-party 
 - Keep the description under 72 characters.
 - Reference issues when relevant: `Closes #123`, `Refs #456`.
 
+# Development Workflow
+
+When adding a feature or fixing a bug:
+
+1. **Plan**: Read relevant specs in `docs/specs/`. Identify affected files and dependencies.
+2. **Implement**: Follow feature-sliced architecture. Schema-first for forms/actions.
+3. **Validate**: Run `bun run format && bun run lint && bun run typecheck`. Fix issues in changed files only.
+4. **Document**: Update `docs/specs/{feature}.md` requirements checklist. Add session entry to `docs/changelog.md`.
+5. **Commit**: Use conventional commits. One logical change per commit.
+
 # Proxy (formerly Middleware)
 
 Next.js 16 renamed `middleware.ts` → `proxy.ts` (root-level, same level as `app/`). Use it for **optimistic** auth redirects only — no DB queries.
