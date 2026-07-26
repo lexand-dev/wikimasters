@@ -20,6 +20,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@shadcn/react": "^0.2.1",
     "@uiw/react-md-editor": "^4.0.8",
+    "@vercel/blob": "^2.6.1",
     "better-auth": "^1.6.24",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
