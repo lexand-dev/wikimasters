@@ -72,7 +72,7 @@ export function SignInView() {
     }
 
     toast.success("Signed in successfully");
-    router.push("/");
+    router.push("/wiki");
     router.refresh();
   };
 

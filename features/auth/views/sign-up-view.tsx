@@ -77,7 +77,7 @@ export function SignUpView() {
     }
 
     toast.success("Account created successfully");
-    router.push("/");
+    router.push("/wiki");
     router.refresh();
   };
 
