@@ -13,6 +13,7 @@ Article management system with Markdown editing, file uploads, and author-based 
 - [x] Image upload (Vercel Blob)
 - [x] Slug generation with collision handling
 - [x] Published/draft state
+- [x] Pageviews (Upstash Redis SADD + INCR, 24h dedup, author excluded)
 - [ ] Article search
 - [ ] Categories/tags
 - [ ] Comments
@@ -25,6 +26,8 @@ Article management system with Markdown editing, file uploads, and author-based 
 | Server actions | `features/wiki/actions/articles.ts` | Done |
 | Upload action | `features/wiki/actions/uploads.ts` | Done (Vercel Blob) |
 | Data layer | `features/wiki/data/articles.ts` | Done | cached |
+| Pageviews action | `features/wiki/actions/pageviews.ts` | Done |
+| Pageviews hook | `features/wiki/hooks/use-article-views.ts` | Done |
 | Schema (Zod) | `features/wiki/schema/article-schema.ts` | Done |
 | Editor component | `features/wiki/components/wiki-editor.tsx` | Done |
 | Article viewer | `features/wiki/components/wiki-article-viewer.tsx` | Done |
@@ -66,6 +69,35 @@ Indexes: `articles_authorId_idx` on `authorId`.
 - **Resilience**: cache read/write failures are caught and fall through to the DB; invalidation failures are best-effort (the TTL still bounds staleness).
 - **Client**: singleton in `lib/redis.ts` (env-gated with `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`).
 - **`getArticleById` is intentionally uncached** — single-row detail is cheap and ownership/draft visibility favors freshness.
+
+## Pageviews
+
+Per-article view counter with a 24-hour unique-viewer dedup window, backed by Upstash Redis.
+
+**Keys**
+- `wiki:article:{id}:views` — integer counter (atomic `INCR`)
+- `wiki:article:{id}:viewers` — set of `user.id`s seen in the last 24h (atomic `SADD` + `EXPIRE`)
+
+**Flow** (`incrementArticleViews(id, authorId)`)
+1. `requireUser()` → `user.id` (throws if unauthenticated; matches the unified server-action style).
+2. If `user.id === authorId` → return `0` (authors don't inflate their own counters).
+3. Pipeline `[SADD viewers <userId>, EXPIRE viewers 86400]` — single round trip. SADD returns `1` if the user is new to the set, `0` if already present (returning visitor).
+4. If SADD returned `1` → `INCR views` and return the new count. If `0` → return `0` (no double-count); the client hook keeps the SSR-provided value.
+
+**Resilience**
+- All Redis calls are wrapped in try/catch; an Upstash outage cannot block article rendering.
+- `getArticleViews(id)` (used for SSR initial display) is also fail-open.
+
+**Hook** (`useArticleViews(articleId, initialViews, authorId)`)
+- Fires `incrementArticleViews` once on mount.
+- `useRef` guard suppresses a duplicate action call when StrictMode double-invokes effects in dev (no behavior change in prod; server-side SADD is the real correctness backstop).
+- `views` state is seeded with the SSR value and only updates when the action returns a strictly greater count.
+
+**Tradeoffs**
+- 24h window picks "unique daily viewers" — refreshing or returning same-day counts as 1 visit, returning the next day counts again.
+- The `viewers` set self-evicts via TTL; no nightly cleanup needed.
+- Pipeline (SADD + EXPIRE) is **not atomic across the two commands**, but SADD's idempotence makes the race safe: concurrent new visitors each get SADD=1 → both INCR → both counted. That's the correct behavior (two unique people did visit).
+- Counters live only in Redis for now. A daily snapshot to Postgres can be added later if analytics need SQL-backed rollups.
 
 ## Form Validation
 
