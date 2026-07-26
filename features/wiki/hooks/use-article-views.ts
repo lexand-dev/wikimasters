@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { incrementArticleViews } from "@/features/wiki/actions/pageviews";
 
-export function useArticleViews(articleId: number, initialViews = 0) {
+export function useArticleViews(
+  articleId: number,
+  initialViews = 0,
+  authorId?: string,
+) {
   const [views, setViews] = useState(initialViews);
   const incrementedRef = useRef(false);
 
@@ -13,7 +17,7 @@ export function useArticleViews(articleId: number, initialViews = 0) {
 
     let cancelled = false;
 
-    incrementArticleViews(articleId)
+    incrementArticleViews(articleId, authorId)
       .then((count) => {
         if (!cancelled && count > 0) setViews(count);
       })
@@ -22,7 +26,7 @@ export function useArticleViews(articleId: number, initialViews = 0) {
     return () => {
       cancelled = true;
     };
-  }, [articleId]);
+  }, [articleId, authorId]);
 
   return views;
 }
