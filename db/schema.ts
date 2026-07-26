@@ -80,19 +80,27 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
-export const articles = pgTable("articles", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  slug: text("slug").notNull().unique(),
-  content: text("content").notNull(),
-  imageUrl: text("image_url"),
-  published: boolean("published").default(false).notNull(),
-  authorId: text("author_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
-});
+export const articles = pgTable(
+  "articles",
+  {
+    id: serial("id").primaryKey(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull().unique(),
+    content: text("content").notNull(),
+    imageUrl: text("image_url"),
+    published: boolean("published").default(false).notNull(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("articles_authorId_idx").on(table.authorId)],
+);
 
 export const relations = defineRelations(
   { session, user, account, articles },
