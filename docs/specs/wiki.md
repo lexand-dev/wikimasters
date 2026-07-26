@@ -10,7 +10,7 @@ Article management system with Markdown editing, file uploads, and author-based 
 - [x] Edit own articles
 - [x] Delete own articles
 - [x] View articles (public landing, authenticated detail)
-- [x] Image upload (mock URL, Cloudinary pending)
+- [x] Image upload (Vercel Blob)
 - [x] Slug generation with collision handling
 - [x] Published/draft state
 - [ ] Article search
@@ -23,7 +23,7 @@ Article management system with Markdown editing, file uploads, and author-based 
 | Component | Location | Status |
 |-----------|----------|--------|
 | Server actions | `features/wiki/actions/articles.ts` | Done |
-| Upload action | `features/wiki/actions/uploads.ts` | Done (mock) |
+| Upload action | `features/wiki/actions/uploads.ts` | Done (Vercel Blob) |
 | Data layer | `features/wiki/data/articles.ts` | Done |
 | Schema (Zod) | `features/wiki/schema/article-schema.ts` | Done |
 | Editor component | `features/wiki/components/wiki-editor.tsx` | Done |
@@ -63,6 +63,6 @@ Server-side: `createArticleSchema.parse()` / `updateArticleSchema.parse()`.
 
 ## Pending
 
-- Replace mock upload URL with real Cloudinary/S3 integration.
+- Migrations: run `bun run db:generate` before deploys, then `bun run db:migrate`; keep `db:push` for local dev only.
 - Add search functionality.
 - Add categories/tags for organization.
