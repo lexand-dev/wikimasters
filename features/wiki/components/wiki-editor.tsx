@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import MDEditor from "@uiw/react-md-editor";
-import { Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
@@ -17,6 +17,10 @@ import {
   type ArticleValues,
   articleSchema,
 } from "@/features/wiki/schema/article-schema";
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} from "@/features/wiki/schema/upload-schema";
 
 interface WikiEditorProps {
   initialTitle?: string;
@@ -32,6 +36,8 @@ export function WikiEditor({
   articleId,
 }: WikiEditorProps) {
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -51,12 +57,36 @@ export function WikiEditor({
   });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError(null);
     const selected = event.target.files?.[0] ?? null;
+
+    if (!selected) {
+      setFile(null);
+      return;
+    }
+
+    if (
+      !ALLOWED_MIME_TYPES.includes(
+        selected.type as (typeof ALLOWED_MIME_TYPES)[number],
+      )
+    ) {
+      setFileError("Unsupported file type. Use JPEG, PNG, GIF, or WebP.");
+      setFile(null);
+      return;
+    }
+
+    if (selected.size > MAX_FILE_SIZE) {
+      setFileError(`File too large (max ${MAX_FILE_SIZE / 1024 / 1024} MB).`);
+      setFile(null);
+      return;
+    }
+
     setFile(selected);
   };
 
   const removeFile = () => {
     setFile(null);
+    setFileError(null);
   };
 
   const onSubmit = async (values: ArticleValues) => {
@@ -66,10 +96,18 @@ export function WikiEditor({
       let imageUrl: string | undefined;
 
       if (file) {
+        setIsUploading(true);
         const fd = new FormData();
-        fd.append("files", file);
-        const uploaded = await uploadFile(fd);
-        imageUrl = uploaded?.url;
+        fd.append("file", file);
+        const result = await uploadFile(fd);
+        setIsUploading(false);
+
+        if (!result.success) {
+          setSubmitError(result.error ?? "Upload failed");
+          return;
+        }
+
+        imageUrl = result.data?.url;
       }
 
       const payload = {
@@ -90,6 +128,7 @@ export function WikiEditor({
         }
       }
     } catch (err) {
+      setIsUploading(false);
       const message =
         err instanceof Error ? err.message : "Failed to submit article";
       setSubmitError(message);
@@ -222,11 +261,18 @@ export function WikiEditor({
                 />
               </div>
 
+              {fileError && (
+                <p className="text-sm text-destructive">{fileError}</p>
+              )}
+
               {file && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Uploaded File:</Label>
                   <div className="flex items-center justify-between p-2 bg-muted rounded-md">
                     <div className="flex items-center space-x-2">
+                      {isUploading && (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      )}
                       <span className="text-sm font-medium">{file.name}</span>
                       <span className="text-xs text-muted-foreground">
                         ({(file.size / 1024).toFixed(1)} KB)
@@ -237,6 +283,7 @@ export function WikiEditor({
                       variant="ghost"
                       size="sm"
                       onClick={removeFile}
+                      disabled={isUploading}
                       className="h-8 w-8 p-0"
                     >
                       <X className="h-4 w-4" />
@@ -262,10 +309,14 @@ export function WikiEditor({
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="min-w-25 cursor-pointer"
               >
-                {isSubmitting ? "Saving..." : "Save Article"}
+                {isUploading
+                  ? "Uploading..."
+                  : isSubmitting
+                    ? "Saving..."
+                    : "Save Article"}
               </Button>
             </div>
           </CardContent>
