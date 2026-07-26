@@ -10,6 +10,7 @@ import {
   type UpdateArticleValues,
   updateArticleSchema,
 } from "@/features/wiki/schema/article-schema";
+import { revalidateArticlesCache } from "@/features/wiki/data/articles";
 import { getSession } from "@/lib/session";
 import { createSlug } from "@/lib/utils";
 
@@ -46,6 +47,8 @@ export async function createArticle(data: CreateArticleValues) {
     })
     .returning();
 
+  await revalidateArticlesCache();
+
   return {
     success: true,
     message: "Article created",
@@ -72,6 +75,8 @@ export async function updateArticle(id: string, data: UpdateArticleValues) {
     throw new Error("Article not found or you are not the author");
   }
 
+  await revalidateArticlesCache();
+
   return { success: true, message: `Article ${id} updated` };
 }
 
@@ -87,6 +92,8 @@ export async function deleteArticle(id: string) {
   if (!result) {
     throw new Error("Article not found or you are not the author");
   }
+
+  await revalidateArticlesCache();
 
   return { success: true, message: `Article ${id} deleted` };
 }
