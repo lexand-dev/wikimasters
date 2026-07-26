@@ -15,7 +15,7 @@ export const NavBar = async () => {
             href="/"
             className="font-bold text-xl tracking-tight text-gray-900"
           >
-            Wikimasters
+            WikiFlow
           </Link>
           <NavigationMenu>
             <NavigationMenuList className="flex items-center gap-2">
