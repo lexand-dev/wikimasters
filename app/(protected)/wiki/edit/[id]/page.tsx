@@ -1,4 +1,7 @@
+import { notFound } from "next/navigation";
+import { getArticleById } from "@/features/wiki/data/articles";
 import { EditorView } from "@/features/wiki/views/editor-view";
+import { getSession } from "@/lib/session";
 
 interface EditArticlePageProps {
   params: Promise<{
@@ -11,33 +14,29 @@ export default async function EditArticlePage({
 }: EditArticlePageProps) {
   const { id } = await params;
 
-  // In a real app, you would fetch the article data here
-  const mockData =
-    id !== "new"
-      ? {
-          title: `Sample Article ${id}`,
-          content: `# Sample Article ${id}
+  const articleId = Number(id);
+  if (
+    !Number.isFinite(articleId) ||
+    !Number.isInteger(articleId) ||
+    articleId <= 0
+  ) {
+    notFound();
+  }
 
-This is some sample markdown content for article ${id}.
+  const article = await getArticleById(articleId);
+  if (!article) {
+    notFound();
+  }
 
-## Features
-- **Bold text**
-- *Italic text*
-- [Links](https://example.com)
-
-## Code Example
-\`\`\`javascript
-console.log("Hello from article ${id}");
-\`\`\`
-
-This would normally be fetched from your API.`,
-        }
-      : {};
+  const session = await getSession();
+  if (session?.user.id !== article.authorId) {
+    notFound();
+  }
 
   return (
     <EditorView
-      initialTitle={mockData.title}
-      initialContent={mockData.content}
+      initialTitle={article.title}
+      initialContent={article.content}
       isEditing
       articleId={id}
     />
