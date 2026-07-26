@@ -88,6 +88,12 @@ Per-article view counter with a 24-hour unique-viewer dedup window, backed by Up
 - All Redis calls are wrapped in try/catch; an Upstash outage cannot block article rendering.
 - `getArticleViews(id)` (used for SSR initial display) is also fail-open.
 
+**Celebration email**
+- When a new unique viewer pushes the count across a milestone (`10`, `100`, `1_000`, `10_000`), the author is emailed via Resend.
+- Implemented in `features/wiki/actions/send-celebration-email.ts`; called fire-and-forget from `incrementArticleViews` so Resend latency never blocks the page.
+- Idempotency key: `celebration-email/{articleId}/{pageviews}` — retries are safe.
+- Sender: `WikiFlow <onboarding@resend.dev>` (sandbox; will only deliver to the Resend account owner until a verified domain is set).
+
 **Hook** (`useArticleViews(articleId, initialViews, authorId)`)
 - Fires `incrementArticleViews` once on mount.
 - `useRef` guard suppresses a duplicate action call when StrictMode double-invokes effects in dev (no behavior change in prod; server-side SADD is the real correctness backstop).

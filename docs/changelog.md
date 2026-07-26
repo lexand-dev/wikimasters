@@ -60,6 +60,15 @@
 - Extracted shared `articleSchema` in `article-schema.ts`
 - `updateArticleSchema` now requires all fields (no partial)
 
+## Session 6 — View Milestone Celebration Emails
+
+- Pageview counter in Redis (`wiki:article:{id}:views`) with 24h unique-viewer dedup set
+- `incrementArticleViews(id, authorId)` — author self-views excluded; 24h SADD dedup
+- `sendCelebrationEmail` fires from `incrementArticleViews` on milestones (10, 100, 1k, 10k)
+- Joins `articles.authorId → user.email` to find the recipient
+- Idempotency key `celebration-email/{articleId}/{pageviews}` for safe retries
+- Fire-and-forget; errors logged, never thrown
+
 ## Next Steps
 
 - [ ] Replace mock upload URL with Cloudinary/S3
