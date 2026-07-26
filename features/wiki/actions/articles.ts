@@ -1,6 +1,9 @@
 "use server";
 
+import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { db } from "@/db";
+import { articles } from "@/db/schema";
 import {
   type CreateArticleValues,
   createArticleSchema,
@@ -8,6 +11,7 @@ import {
   updateArticleSchema,
 } from "@/features/wiki/schema/article-schema";
 import { getSession } from "@/lib/session";
+import { createSlug } from "@/lib/utils";
 
 async function requireUser() {
   const session = await getSession();
@@ -15,29 +19,78 @@ async function requireUser() {
   return session.user;
 }
 
+function parseArticleId(id: string): number {
+  const num = Number(id);
+  if (!Number.isFinite(num) || !Number.isInteger(num) || num <= 0) {
+    throw new Error("Invalid article id");
+  }
+  return num;
+}
+
 export async function createArticle(data: CreateArticleValues) {
   const user = await requireUser();
   const values = createArticleSchema.parse(data);
 
-  // TODO: Replace with actual database insert
-  console.log("✨ createArticle called:", { ...values, authorId: user.id });
-  return { success: true, message: "Article create logged (stub)" };
+  const baseSlug = createSlug(values.title);
+  const slug = `${baseSlug}-${Date.now()}`;
+
+  const [response] = await db
+    .insert(articles)
+    .values({
+      title: values.title,
+      content: values.content,
+      slug,
+      authorId: user.id,
+      published: values.published ?? true,
+      imageUrl: values.imageUrl,
+    })
+    .returning();
+
+  return {
+    success: true,
+    message: "Article created",
+    id: response.id,
+  };
 }
 
 export async function updateArticle(id: string, data: UpdateArticleValues) {
   const user = await requireUser();
   const values = updateArticleSchema.parse(data);
+  const articleId = parseArticleId(id);
 
-  // TODO: Replace with actual database update
-  console.log("📝 updateArticle called:", { ...values, id, authorId: user.id });
-  return { success: true, message: `Article ${id} update logged (stub)` };
+  const [result] = await db
+    .update(articles)
+    .set({
+      title: values.title,
+      content: values.content,
+      slug: `${createSlug(values.title)}-${Date.now()}`,
+    })
+    .where(and(eq(articles.id, articleId), eq(articles.authorId, user.id)))
+    .returning();
+
+  if (!result) {
+    throw new Error("Article not found or you are not the author");
+  }
+
+  return { success: true, message: `Article ${id} updated` };
 }
 
 export async function deleteArticle(id: string) {
   const user = await requireUser();
-  // TODO: Replace with actual database delete
-  console.log("🗑️ deleteArticle called:", id, "with author", user.name);
-  return { success: true, message: `Article ${id} delete logged (stub)` };
+  const articleId = parseArticleId(id);
+
+  console.log("🗑️ deleteArticle called:", id);
+
+  const [result] = await db
+    .delete(articles)
+    .where(and(eq(articles.id, articleId), eq(articles.authorId, user.id)))
+    .returning();
+
+  if (!result) {
+    throw new Error("Article not found or you are not the author");
+  }
+
+  return { success: true, message: `Article ${id} deleted` };
 }
 
 // Form-friendly server action: accepts FormData from a client form and calls deleteArticle

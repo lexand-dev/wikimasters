@@ -40,7 +40,7 @@ export async function uploadFile(formData: FormData): Promise<UploadedFile> {
   // TODO: Insert Cloudinary upload code here.
   // Example: upload using Cloudinary SDK on the server and return secure_url
 
-  // Return mock file info for now
+  // TODO: Replace mock URL with real Cloudinary (or S3) upload
   return {
     url: "/uploads/mock-image.jpg",
     size: file.size,
