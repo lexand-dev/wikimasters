@@ -79,8 +79,6 @@ export async function deleteArticle(id: string) {
   const user = await requireUser();
   const articleId = parseArticleId(id);
 
-  console.log("🗑️ deleteArticle called:", id);
-
   const [result] = await db
     .delete(articles)
     .where(and(eq(articles.id, articleId), eq(articles.authorId, user.id)))
