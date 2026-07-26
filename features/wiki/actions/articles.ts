@@ -4,13 +4,13 @@ import { and, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { articles } from "@/db/schema";
+import { revalidateArticlesCache } from "@/features/wiki/data/articles";
 import {
   type CreateArticleValues,
   createArticleSchema,
   type UpdateArticleValues,
   updateArticleSchema,
 } from "@/features/wiki/schema/article-schema";
-import { revalidateArticlesCache } from "@/features/wiki/data/articles";
 import { getSession } from "@/lib/session";
 import { createSlug } from "@/lib/utils";
 

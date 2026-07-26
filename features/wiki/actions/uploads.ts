@@ -2,8 +2,8 @@
 
 import { put } from "@vercel/blob";
 import {
-  type UploadedFile,
   fileUploadSchema,
+  type UploadedFile,
 } from "@/features/wiki/schema/upload-schema";
 import { getSession } from "@/lib/session";
 
