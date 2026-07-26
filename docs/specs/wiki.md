@@ -24,7 +24,7 @@ Article management system with Markdown editing, file uploads, and author-based 
 |-----------|----------|--------|
 | Server actions | `features/wiki/actions/articles.ts` | Done |
 | Upload action | `features/wiki/actions/uploads.ts` | Done (Vercel Blob) |
-| Data layer | `features/wiki/data/articles.ts` | Done |
+| Data layer | `features/wiki/data/articles.ts` | Done | cached |
 | Schema (Zod) | `features/wiki/schema/article-schema.ts` | Done |
 | Editor component | `features/wiki/components/wiki-editor.tsx` | Done |
 | Article viewer | `features/wiki/components/wiki-article-viewer.tsx` | Done |
@@ -55,6 +55,17 @@ Indexes: `articles_authorId_idx` on `authorId`.
 - **Create**: Any authenticated user. `authorId` derived from session.
 - **Edit/Delete**: Owner only. Enforced via `WHERE authorId = session.user.id`. Throws if 0 rows matched.
 - **View**: Public landing shows published articles only. Authenticated users see all.
+
+## Caching
+
+`getArticles()` is cached with Upstash Redis (cache-aside + TTL + write-invalidation).
+
+- **Key**: `wiki:articles:published:list`
+- **TTL**: 5 minutes (`ex` 300s)
+- **Invalidation**: `revalidateArticlesCache()` is called after `createArticle`, `updateArticle`, and `deleteArticle` so the published list never serves stale rows.
+- **Resilience**: cache read/write failures are caught and fall through to the DB; invalidation failures are best-effort (the TTL still bounds staleness).
+- **Client**: singleton in `lib/redis.ts` (env-gated with `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`).
+- **`getArticleById` is intentionally uncached** — single-row detail is cheap and ownership/draft visibility favors freshness.
 
 ## Form Validation
 
