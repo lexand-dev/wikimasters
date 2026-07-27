@@ -1,13 +1,16 @@
 "use server";
 
+import { render } from "@react-email/render";
 import { eq } from "drizzle-orm";
+import React from "react";
 import { db } from "@/db";
 import { articles, user } from "@/db/schema";
+import CelebrationTemplate from "@/features/wiki/emails/celebration-template";
 import { resend } from "@/lib/resend";
 
 const MILESTONES = [10, 100, 1000, 10000] as const;
 const FROM_ADDRESS = "WikiFlow <onboarding@resend.dev>";
-const APP_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const APP_URL = process.env.VERCEL_URL ?? "http://localhost:3000";
 
 function formatViews(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`;
@@ -24,12 +27,12 @@ export async function sendCelebrationEmail({
   if (!(MILESTONES as readonly number[]).includes(pageviews)) return;
 
   const [response] = await db
-    .select({ email: user.email, title: articles.title })
+    .select({ email: user.email, title: articles.title, name: user.name })
     .from(articles)
     .leftJoin(user, eq(articles.authorId, user.id))
     .where(eq(articles.id, articleId));
 
-  const { email, title } = response;
+  const { email, title, name } = response;
 
   if (!email) {
     console.log(
@@ -41,27 +44,21 @@ export async function sendCelebrationEmail({
   const articleUrl = `${APP_URL}/wiki/${articleId}`;
   const formattedViews = formatViews(pageviews);
 
+  const html = await render(
+    React.createElement(CelebrationTemplate, {
+      name: name ?? undefined,
+      pageviews,
+      articleTitle: title ?? undefined,
+      articleUrl,
+    }),
+  );
+
   const { error } = await resend.emails.send(
     {
       from: FROM_ADDRESS,
       to: email,
       subject: `🎉 Your article on WikiFlow got ${formattedViews} views!`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
-          <h1 style="font-size: 24px; margin: 0 0 16px;">🎉 ${formattedViews} views!</h1>
-          <p style="font-size: 16px; line-height: 1.5; color: #333;">
-            Your article <strong>${title}</strong> just hit <strong>${pageviews.toLocaleString()} views</strong> on WikiFlow.
-          </p>
-          <p style="font-size: 16px; line-height: 1.5; color: #333;">
-            Keep up the great work — your contribution is making an impact.
-          </p>
-          <p style="margin: 24px 0 0;">
-            <a href="${articleUrl}" style="display: inline-block; background: #111; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none; font-size: 14px;">
-              View article →
-            </a>
-          </p>
-        </div>
-      `,
+      html,
     },
     { idempotencyKey: `celebration-email/${articleId}/${pageviews}` },
   );
