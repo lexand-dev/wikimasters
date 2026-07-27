@@ -1,9 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,47 +30,21 @@ import { authClient } from "@/lib/auth-client";
 
 export function SignUpView() {
   const router = useRouter();
-  const [form, setForm] = useState<SignUpValues>({
-    name: "",
-    email: "",
-    password: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { name: "", email: "", password: "" },
   });
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof SignUpValues | "form", string>>
-  >({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const update = (key: keyof SignUpValues, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
-
-  const validate = (): boolean => {
-    const result = signUpSchema.safeParse(form);
-    if (result.success) {
-      setErrors({});
-      return true;
-    }
-    const next: Partial<Record<keyof SignUpValues, string>> = {};
-    for (const issue of result.error.issues) {
-      const key = issue.path[0] as keyof SignUpValues | undefined;
-      if (key && !next[key]) next[key] = issue.message;
-    }
-    setErrors(next);
-    return false;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setIsSubmitting(true);
+  const onSubmit = async (values: SignUpValues) => {
     const { error } = await authClient.signUp.email({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password,
+      name: values.name.trim(),
+      email: values.email.trim(),
+      password: values.password,
     });
-    setIsSubmitting(false);
 
     if (error) {
       toast.error(error.message ?? "Sign up failed");
@@ -91,7 +66,7 @@ export function SignUpView() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FieldGroup>
               <Field orientation="vertical">
                 <FieldLabel htmlFor="name">Name</FieldLabel>
@@ -100,11 +75,10 @@ export function SignUpView() {
                   type="text"
                   autoComplete="name"
                   placeholder="Your name"
-                  value={form.name}
-                  onChange={(e) => update("name", e.target.value)}
                   aria-invalid={!!errors.name}
+                  {...register("name")}
                 />
-                {errors.name && <FieldError>{errors.name}</FieldError>}
+                {errors.name && <FieldError>{errors.name.message}</FieldError>}
               </Field>
 
               <Field orientation="vertical">
@@ -114,11 +88,12 @@ export function SignUpView() {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
-                  value={form.email}
-                  onChange={(e) => update("email", e.target.value)}
                   aria-invalid={!!errors.email}
+                  {...register("email")}
                 />
-                {errors.email && <FieldError>{errors.email}</FieldError>}
+                {errors.email && (
+                  <FieldError>{errors.email.message}</FieldError>
+                )}
               </Field>
 
               <Field orientation="vertical">
@@ -128,14 +103,13 @@ export function SignUpView() {
                   type="password"
                   autoComplete="new-password"
                   placeholder="At least 8 characters"
-                  value={form.password}
-                  onChange={(e) => update("password", e.target.value)}
                   aria-invalid={!!errors.password}
+                  {...register("password")}
                 />
-                {errors.password && <FieldError>{errors.password}</FieldError>}
+                {errors.password && (
+                  <FieldError>{errors.password.message}</FieldError>
+                )}
               </Field>
-
-              {errors.form && <FieldError>{errors.form}</FieldError>}
 
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {isSubmitting ? (
