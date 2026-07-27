@@ -70,6 +70,17 @@
 - Fire-and-forget; errors logged, never thrown
 - Moved email body into `features/wiki/emails/celebration-template.tsx` rendered via `@react-email/render`; action now composes the template with `React.createElement` and reads `user.name` for the greeting. Article URL source switched from `BETTER_AUTH_URL` to `VERCEL_URL`.
 
+## Session 7 — AI Article Summaries
+
+- Added `summary` (nullable text) column to `articles`
+- `summarizeArticle(title, content)` service using `ai` SDK + Vercel AI Gateway `openai/gpt-5-nano`
+- `createArticle` / `updateArticle` actions now generate and persist the summary in the same write
+- `getArticles` reads the new `summary` column (replaces the SQL `substring` excerpt); `ArticleSummary.summary` is `string | null`
+- `WikiCard` falls back to `"No summary available"` when summary is null
+- `app/api/summary/route.ts` cron endpoint scans `summary IS NULL` rows, backfills them, and invalidates the published-list cache; gated by `Bearer ${CRON_SECRET}` outside development
+- `vercel.json` schedules the route weekly (`0 0 * * 0`)
+- Per-row failures in the cron loop are caught and logged; one bad row never aborts the batch
+
 ## Next Steps
 
 - [ ] Replace mock upload URL with Cloudinary/S3

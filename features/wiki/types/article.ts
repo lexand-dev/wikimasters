@@ -13,6 +13,6 @@ export type ArticleSummary = {
   title: string;
   authorName: string | null;
   date: string;
-  summary: string;
+  summary: string | null;
   href: string;
 };

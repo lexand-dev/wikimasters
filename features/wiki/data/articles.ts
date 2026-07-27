@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, user } from "@/db/schema";
 import type { ArticleSummary } from "@/features/wiki/types/article";
@@ -14,9 +14,7 @@ async function fetchPublishedArticlesFromDb(): Promise<ArticleSummary[]> {
       id: articles.id,
       title: articles.title,
       createdAt: articles.createdAt,
-      excerpt: sql<string>`substring(${articles.content}, 1, 200)`.as(
-        "excerpt",
-      ),
+      summary: articles.summary,
       authorName: user.name,
     })
     .from(articles)
@@ -25,21 +23,17 @@ async function fetchPublishedArticlesFromDb(): Promise<ArticleSummary[]> {
     .orderBy(desc(articles.createdAt));
 
   return rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    authorName: r.authorName,
+    ...r,
     date: formatDate(r.createdAt),
-    summary: r.excerpt,
     href: `/wiki/${r.id}`,
   }));
 }
 
 export async function getArticles(): Promise<ArticleSummary[]> {
-  try {
-    const cached = await redis.get<ArticleSummary[]>(PUBLISHED_LIST_CACHE_KEY);
-    if (cached) return cached;
-  } catch {
-    // Cache read failed — fall through to DB; never block on cache errors.
+  const cached = await redis.get<ArticleSummary[]>(PUBLISHED_LIST_CACHE_KEY);
+  if (cached) {
+    console.log("🎯 Get Articles Cache Hit!");
+    return cached;
   }
 
   const response = await fetchPublishedArticlesFromDb();
@@ -48,8 +42,8 @@ export async function getArticles(): Promise<ArticleSummary[]> {
     await redis.set(PUBLISHED_LIST_CACHE_KEY, response, {
       ex: PUBLISHED_LIST_TTL_SECONDS,
     });
-  } catch {
-    // Cache write failed — non-fatal; next read will retry.
+  } catch (err) {
+    console.warn("Failed to set articles cache", err);
   }
 
   return response;
@@ -58,8 +52,8 @@ export async function getArticles(): Promise<ArticleSummary[]> {
 export async function revalidateArticlesCache() {
   try {
     await redis.del(PUBLISHED_LIST_CACHE_KEY);
-  } catch {
-    // Best-effort invalidation; TTL will eventually refresh the entry.
+  } catch (err) {
+    console.warn("Failed to invalidate articles cache", err);
   }
 }
 

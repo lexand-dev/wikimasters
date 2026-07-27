@@ -11,6 +11,7 @@ import {
   type UpdateArticleValues,
   updateArticleSchema,
 } from "@/features/wiki/schema/article-schema";
+import { summarizeArticle } from "@/features/wiki/services/summarize-article";
 import { getSession } from "@/lib/session";
 import { createSlug } from "@/lib/utils";
 
@@ -35,6 +36,8 @@ export async function createArticle(data: CreateArticleValues) {
   const baseSlug = createSlug(values.title);
   const slug = `${baseSlug}-${Date.now()}`;
 
+  const summary = await summarizeArticle(values.title, values.content);
+
   const [response] = await db
     .insert(articles)
     .values({
@@ -44,6 +47,7 @@ export async function createArticle(data: CreateArticleValues) {
       authorId: user.id,
       published: values.published ?? true,
       imageUrl: values.imageUrl,
+      summary,
     })
     .returning();
 
@@ -61,12 +65,15 @@ export async function updateArticle(id: string, data: UpdateArticleValues) {
   const values = updateArticleSchema.parse(data);
   const articleId = parseArticleId(id);
 
+  const summary = await summarizeArticle(values.title, values.content);
+
   const [result] = await db
     .update(articles)
     .set({
       title: values.title,
       content: values.content,
-      slug: `${createSlug(values.title)}-${Date.now()}`,
+      imageUrl: data.imageUrl,
+      summary,
     })
     .where(and(eq(articles.id, articleId), eq(articles.authorId, user.id)))
     .returning();

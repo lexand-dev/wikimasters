@@ -87,6 +87,7 @@ export const articles = pgTable(
     title: text("title").notNull(),
     slug: text("slug").notNull().unique(),
     content: text("content").notNull(),
+    summary: text("summary"),
     imageUrl: text("image_url"),
     published: boolean("published").default(false).notNull(),
     authorId: text("author_id")

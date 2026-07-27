@@ -26,7 +26,7 @@ export function WikiCard({ article }: WikiCardProps) {
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
       <CardContent className="py-0">
-        <CardDescription>{summary}</CardDescription>
+        <CardDescription>{summary ?? "No summary available"}</CardDescription>
       </CardContent>
       <CardFooter className="pt-2">
         <Link

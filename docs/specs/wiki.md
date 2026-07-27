@@ -14,6 +14,7 @@ Article management system with Markdown editing, file uploads, and author-based 
 - [x] Slug generation with collision handling
 - [x] Published/draft state
 - [x] Pageviews (Upstash Redis SADD + INCR, 24h dedup, author excluded)
+- [x] AI-generated summary (Vercel AI Gateway `openai/gpt-5-nano`, written on save, backfilled via cron)
 - [ ] Article search
 - [ ] Categories/tags
 - [ ] Comments
@@ -34,6 +35,8 @@ Article management system with Markdown editing, file uploads, and author-based 
 | Wiki card | `features/wiki/components/wiki-card.tsx` | Done |
 | Editor view | `features/wiki/views/editor-view.tsx` | Done |
 | Article view | `features/wiki/views/article-view.tsx` | Done |
+| Summarize service | `features/wiki/services/summarize-article.ts` | Done |
+| Summary cron API | `app/api/summary/route.ts` | Done |
 
 ## Database
 
@@ -45,6 +48,7 @@ Table: `articles`
 | `title` | text | Required |
 | `slug` | text | Unique, auto-generated |
 | `content` | text | Markdown |
+| `summary` | text | Nullable, AI-generated 1–2 sentence summary |
 | `imageUrl` | text | Optional |
 | `published` | boolean | Default false |
 | `authorId` | text FK | References `user.id`, cascade delete |
@@ -104,6 +108,21 @@ Per-article view counter with a 24-hour unique-viewer dedup window, backed by Up
 - The `viewers` set self-evicts via TTL; no nightly cleanup needed.
 - Pipeline (SADD + EXPIRE) is **not atomic across the two commands**, but SADD's idempotence makes the race safe: concurrent new visitors each get SADD=1 → both INCR → both counted. That's the correct behavior (two unique people did visit).
 - Counters live only in Redis for now. A daily snapshot to Postgres can be added later if analytics need SQL-backed rollups.
+
+## AI Summary
+
+Each article gets a 1–2 sentence summary written by `openai/gpt-5-nano` via the Vercel AI Gateway.
+
+- **Service** (`features/wiki/services/summarize-article.ts`): `summarizeArticle(title, content)` — throws on empty content, returns the trimmed `text` from `generateText`.
+- **Write path**: called from `createArticle` and `updateArticle` actions, so the summary is always written in the same transaction as the article body.
+- **Backfill path**: `app/api/summary/route.ts` — finds rows where `summary IS NULL`, runs them through the service, writes the result, and invalidates the published-list cache. Protected by `Authorization: Bearer ${CRON_SECRET}` except in development.
+- **Schedule**: Vercel cron in `vercel.json` runs the route weekly (`0 0 * * 0`).
+- **Resilience**: per-row failures in the cron loop are caught and logged; one bad row never aborts the batch. The cached list is only invalidated after the loop succeeds.
+- **UI fallback**: `WikiCard` renders `"No summary available"` when `summary` is null so pre-existing articles and failed generations don't crash the landing page.
+
+**Tradeoffs**
+- `gpt-5-nano` is the cheapest current model and is sufficient for short factual summaries; the model id is a string in the service so it can be swapped without touching the actions.
+- The cron is weekly, not per-write — backfill only covers rows that pre-date the column or whose on-save generation failed. Re-saving an article still regenerates its summary, which is the primary recovery path.
 
 ## Form Validation
 
