@@ -68,6 +68,7 @@
 - Joins `articles.authorId → user.email` to find the recipient
 - Idempotency key `celebration-email/{articleId}/{pageviews}` for safe retries
 - Fire-and-forget; errors logged, never thrown
+- Moved email body into `features/wiki/emails/celebration-template.tsx` rendered via `@react-email/render`; action now composes the template with `React.createElement` and reads `user.name` for the greeting. Article URL source switched from `BETTER_AUTH_URL` to `VERCEL_URL`.
 
 ## Next Steps
 
