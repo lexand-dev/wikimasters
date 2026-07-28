@@ -1,7 +1,18 @@
 import "server-only";
-import assert from "node:assert";
 import { Resend } from "resend";
 
-assert(process.env.RESEND_API_KEY, "You need a RESEND_API_KEY");
+let cachedResend: Resend | null = null;
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+export function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null;
+  }
+
+  if (!cachedResend) {
+    cachedResend = new Resend(process.env.RESEND_API_KEY);
+  }
+
+  return cachedResend;
+}
+
+export const resend = getResendClient();

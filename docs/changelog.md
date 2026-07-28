@@ -81,6 +81,14 @@
 - `vercel.json` schedules the route weekly (`0 0 * * 0`)
 - Per-row failures in the cron loop are caught and logged; one bad row never aborts the batch
 
+## Session 8 — Testing (Vitest + Playwright)
+
+- Vitest: unit + component projects, `@` alias, `server-only` stub, shared `test/setup.ts`
+- Unit tests for article actions (`create` / `update` / `delete`) under `test/unit/`
+- Playwright E2E: setup project + storageState, `auth` + `chromium` projects
+- E2E coverage: sign-in/up/out, protected redirect, article create → edit → delete
+- Scripts: `test`, `test:unit`, `test:e2e`, `test:e2e:ui`
+
 ## Next Steps
 
 - [ ] Replace mock upload URL with Cloudinary/S3

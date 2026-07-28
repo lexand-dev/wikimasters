@@ -15,6 +15,8 @@ Article management system with Markdown editing, file uploads, and author-based 
 - [x] Published/draft state
 - [x] Pageviews (Upstash Redis SADD + INCR, 24h dedup, author excluded)
 - [x] AI-generated summary (Vercel AI Gateway `openai/gpt-5-nano`, written on save, backfilled via cron)
+- [x] Unit tests for article actions (Vitest)
+- [x] E2E article CRUD (Playwright)
 - [ ] Article search
 - [ ] Categories/tags
 - [ ] Comments
@@ -37,6 +39,8 @@ Article management system with Markdown editing, file uploads, and author-based 
 | Article view | `features/wiki/views/article-view.tsx` | Done |
 | Summarize service | `features/wiki/services/summarize-article.ts` | Done |
 | Summary cron API | `app/api/summary/route.ts` | Done |
+| Unit tests | `test/unit/features/wiki/actions/articles.test.ts` | Done |
+| E2E tests | `e2e/articles.spec.ts` | Done |
 
 ## Database
 

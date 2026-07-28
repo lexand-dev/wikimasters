@@ -6,7 +6,7 @@ import React from "react";
 import { db } from "@/db";
 import { articles, user } from "@/db/schema";
 import CelebrationTemplate from "@/features/wiki/emails/celebration-template";
-import { resend } from "@/lib/resend";
+import { getResendClient } from "@/lib/resend";
 
 const MILESTONES = [10, 100, 1000, 10000] as const;
 const FROM_ADDRESS = "WikiFlow <onboarding@resend.dev>";
@@ -52,6 +52,15 @@ export async function sendCelebrationEmail({
       articleUrl,
     }),
   );
+
+  const resend = getResendClient();
+
+  if (!resend) {
+    console.log(
+      `✘ skipping celebration for article ${articleId} on pageviews ${pageviews}, RESEND_API_KEY is not configured`,
+    );
+    return;
+  }
 
   const { error } = await resend.emails.send(
     {

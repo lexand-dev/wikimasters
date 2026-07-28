@@ -10,6 +10,7 @@ User authentication via Better Auth with email/password and OAuth support.
 - [x] Session management with secure cookies
 - [x] Protected route guard at `(protected)/layout.tsx`
 - [x] Optimistic auth redirect in `proxy.ts` (edge-safe, no DB)
+- [x] E2E auth flows (sign-in/up/out, protected redirect)
 - [ ] OAuth providers (Google, GitHub)
 - [ ] Email verification
 - [ ] Password reset
@@ -25,6 +26,8 @@ User authentication via Better Auth with email/password and OAuth support.
 | User button | `features/auth/components/user-button.tsx` | Done |
 | Proxy (middleware) | `proxy.ts` | Done |
 | Protected layout | `app/(protected)/layout.tsx` | Done |
+| E2E auth setup | `e2e/auth.setup.ts` | Done |
+| E2E auth specs | `e2e/auth.spec.ts` | Done |
 
 ## Database
 
